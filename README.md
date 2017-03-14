@@ -35,19 +35,19 @@ The terrain server is a self contained binary with the following command line
 options:
 
 ```sh
-$ cesium-tile-server:
-  -base-terrain-url="/tilesets": base url prefix under which all tilesets are served
-  -cache-limit=1.00MB: the memory size in bytes beyond which resources are not cached. Other memory units can be specified by suffixing the number with kB, MB, GB or TB
-  -dir=".": the root directory under which tileset directories reside
-  -log-level=notice: level at which logging occurs. One of crit, err, notice, debug
-  -memcached="": (optional) memcached connection string for caching tiles e.g. localhost:11211
-  -no-request-log=false: do not log client requests for resources
-  -port=8000: the port on which the server listens
-  -web-dir="": (optional) the root directory containing static files to be served
-  -ssl-cert="": (optional) server public key file. enables ssl. see notes at https://golang.org/pkg/net/http/#ListenAndServeTLS
-  -ssl-key="": (required if ssl-cert passed) server private key file
-  -auth-file="": (optional) htpasswd file. enables BasicAuth. doesnt apply to web-dir
-  -auth-realm="Cesium Tile Server v1.0": (optional) sets HTTP Realm for BasicAuth
+cesium-tile-server
+  -base-terrain-url="/tilesets" # base url prefix under which all tilesets are served
+  -cache-limit=1.00MB # the memory size in bytes beyond which resources are not cached. Other memory units can be specified by suffixing the number with kB, MB, GB or TB
+  -dir="." # the root directory under which tileset directories reside
+  -log-level=notice # level at which logging occurs. One of crit, err, notice, debug
+  -memcached="" # (optional) memcached connection string for caching tiles e.g. localhost:11211
+  -no-request-log=false # do not log client requests for resources
+  -port=8000 # the port on which the server listens
+  -web-dir="" # (optional) the root directory containing static files to be served
+  -ssl-cert="" # (optional) server public key file. enables ssl. see notes at https://golang.org/pkg/net/http/#ListenAndServeTLS
+  -ssl-key="" # (required if ssl-cert passed) server private key file
+  -auth-file="" # (optional) htpasswd file. enables BasicAuth. doesnt apply to web-dir
+  -auth-realm="Cesium Tile Server v1.0" # (optional) sets HTTP Realm for BasicAuth
 ```
 
 Assume you have the following (small) terrain tileset (possibly created with
@@ -78,7 +78,7 @@ cesium-tile-server -dir /data/tilesets/terrain -port 8080
 To serve a png raster tileset on port 8443 with ssl and basicauth:
 
 ```sh
-cesium-tile-server -dir /data/tilesets/png -port 8443 -ssl-cert /etc/ssl/cert.ca.bundle -ssl-key /etc/ssl/server.key -auth-file /data/tilesets/.htpasswd
+cesium-tile-server -dir /data/tilesets/png -port 8443 -ssl-cert /etc/ssl/cert/cert.ca.bundle -ssl-key /etc/ssl/cert/server.key -auth-file /data/tilesets/.htpasswd
 ```
 
 The tiles would then be available under <http://localhost:8080/tilesets/srtm/>
@@ -223,11 +223,11 @@ As per usual the certificate within must be in order of heirarchy from server to
 ### htpasswd
 
 This is great for us, we can do multilevel authentication by
-1: app/site logs into api service by user input, gets login token,
-2: app/site uses token to acquire a `temp tile server auth` from the same api service,
-3: app/site uses said auth to make request to the tile server.
-4: app calls to api service to delete the tmp user when done ..
-4b: and/or server deletes tmp users after certain time
+1. app/site logs into api service by user input, gets login token,
+2. app/site uses token to acquire a `temp tile server auth` from the same api service,
+3. app/site uses said auth to make request to the tile server.
+4. app calls to api service to delete the tmp user when done ..
+  * and/or server deletes tmp users after certain time
 
 And in step 2 htpasswd makes it very easy, because the api can:
 ```sh
@@ -246,9 +246,9 @@ time - timestamp < expiry
 ### Docker
 
 I didnt touch the docker stuff except renames and a note in the README.md. So to use the ssl and/or basicauth in docker someone would need to do something like:
-1: pass the `-ssl-cert`, `-ssl-key`, and `-auth-file` args thru to docker
-2: docker forward args to cesium-tile-server
-3: bind docker and cesium-tile-server ssl ports
+1. pass the `-ssl-cert`, `-ssl-key`, and `-auth-file` args thru to docker
+2. docker forward args to cesium-tile-server
+3. bind docker and cesium-tile-server ssl ports
 
 ## Credits - added by ekerner-com
 
@@ -307,16 +307,16 @@ ekerner-com: OK I didnt read the above before I forked. @geo-data if you prefer 
 
 ekerner.com: My 1st go project to be honest, love the lang so far.
 If there are things which arent Ideal they are
-1: someone could make a super/base class for 
+1. someone could make a super/base class for 
 `handers/terrain.go`
 `handers/pngtile.go`
 and perhaps
 `handers/terrain.go`
 as there is duplicate code in each
-2: would be nice to add support for gzip and/or deflate: 
+2. would be nice to add support for gzip and/or deflate: 
 you could say zgip all of the images if you had a poory compressed png tilesets where they sit. Just needs different headers and perhaps diff store data type.
-3: the handlers/layer.json default file extension is .terrain: nice if you could pass in the default ext eg:
--default-format png // terrain|png
+3. the handlers/layer.json default file extension is .terrain: nice if you could pass in the default ext eg:
+`-default-format png // terrain|png`
 
 ## License
 
@@ -325,4 +325,5 @@ The [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 ## Contact
 
 Homme Zwaagstra <hrz@geodata.soton.ac.uk>
+
 ekerner-com: Eugene Kerner <ekerner@ekerner.com>

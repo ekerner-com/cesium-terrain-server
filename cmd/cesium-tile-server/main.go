@@ -40,9 +40,9 @@ func main() {
 	log.Debug(fmt.Sprintf("serving tilesets from %s", *tilesetRoot))
 
 	r := mux.NewRouter()
-	r.HandleFunc(*baseTerrainUrl+"/{tileset}/layer.json", myhandlers.LayerHandler(store, authFile, authRealm))
-	r.HandleFunc(*baseTerrainUrl+"/{tileset}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.terrain", myhandlers.TerrainHandler(store, authFile, authRealm))
-	r.HandleFunc(*baseTerrainUrl+"/{tileset}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", myhandlers.PngtileHandler(store, authFile, authRealm))
+	r.HandleFunc(*baseTerrainUrl+"/{tileset}/layer.json", myhandlers.LayerHandler(store, *authFile, *authRealm))
+	r.HandleFunc(*baseTerrainUrl+"/{tileset}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.terrain", myhandlers.TerrainHandler(store, *authFile, *authRealm))
+	r.HandleFunc(*baseTerrainUrl+"/{tileset}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", myhandlers.PngtileHandler(store, *authFile, *authRealm))
 	if len(*webRoot) > 0 {
 		log.Debug(fmt.Sprintf("serving static resources from %s", *webRoot))
 		r.PathPrefix("/").Handler(http.FileServer(http.Dir(*webRoot)))
