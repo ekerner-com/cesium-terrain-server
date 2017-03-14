@@ -6,13 +6,13 @@
 
 # If a local source code archive does not exist, get it from GitHub.
 checkout=`cat /tmp/cts-checkout.txt`
-archive="/tmp/local/cesium-terrain-server-${checkout}.tar.gz"
+archive="/tmp/local/cesium-tile-server-${checkout}.tar.gz"
 if [ ! -f $archive ]; then
-    wget --no-verbose -O $archive "https://github.com/geo-data/cesium-terrain-server/archive/${checkout}.tar.gz" || exit 1
+    wget --no-verbose -O $archive "https://github.com/geo-data/cesium-tile-server/archive/${checkout}.tar.gz" || exit 1
 fi
 
 # Set up the source directory
-CTS_DIR=/usr/local/go/src/github.com/geo-data/cesium-terrain-server
+CTS_DIR=/usr/local/go/src/github.com/geo-data/cesium-tile-server
 mkdir -p $CTS_DIR || exit 1
 cd $CTS_DIR || exit 1
 

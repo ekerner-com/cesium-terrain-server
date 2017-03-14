@@ -15,7 +15,8 @@ const (
 var ErrNoItem = errors.New("item not found")
 
 type Storer interface {
-	Tile(tileset string, tile *Terrain) error
+	TileTerrain(tileset string, tile *Terrain) error
+	TilePng(tileset string, tile *Pngtile) error
 	Layer(tileset string) ([]byte, error)
 	TilesetStatus(tileset string) (status TilesetStatus)
 }

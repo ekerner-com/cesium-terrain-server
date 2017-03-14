@@ -1,5 +1,5 @@
 ##
-# Image for the Cesium Terrain Server
+# Image for the Cesium Tile Server
 #
 
 # Ubuntu 14.04 Trusty Tahr

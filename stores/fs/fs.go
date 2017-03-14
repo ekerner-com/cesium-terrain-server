@@ -2,8 +2,8 @@ package fs
 
 import (
 	"fmt"
-	"github.com/geo-data/cesium-terrain-server/log"
-	"github.com/geo-data/cesium-terrain-server/stores"
+	"github.com/ekerner-com/cesium-tile-server/log"
+	"github.com/ekerner-com/cesium-tile-server/stores"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,6 +26,8 @@ func (this *Store) readFile(filename string) (body []byte, err error) {
 		if os.IsNotExist(err) {
 			log.Debug(fmt.Sprintf("file store: not found: %s", filename))
 			err = stores.ErrNoItem
+		} else {
+			log.Debug(fmt.Sprintf("failed to read %s: %s", filename, err))
 		}
 		return
 	}
@@ -35,7 +37,7 @@ func (this *Store) readFile(filename string) (body []byte, err error) {
 }
 
 // Load a terrain tile on disk into the Terrain structure.
-func (this *Store) Tile(tileset string, tile *stores.Terrain) (err error) {
+func (this *Store) TileTerrain(tileset string, tile *stores.Terrain) (err error) {
 	filename := filepath.Join(
 		this.root,
 		tileset,
@@ -49,6 +51,24 @@ func (this *Store) Tile(tileset string, tile *stores.Terrain) (err error) {
 	}
 
 	err = tile.UnmarshalBinary(body)
+	return
+}
+
+// Load a png tile on disk into the Pngtile structure.
+func (this *Store) TilePng(tileset string, tile *stores.Pngtile) (err error) {
+	filename := filepath.Join(
+		this.root,
+		tileset,
+		strconv.FormatUint(tile.Z, 10),
+		strconv.FormatUint(tile.X, 10),
+		strconv.FormatUint(tile.Y, 10)+".png")
+
+	body, err := this.readFile(filename)
+	if err != nil {
+		return
+	}
+
+	err = tile.PutImage(body)
 	return
 }
 

@@ -11,11 +11,11 @@ import (
 	"net/http"
 )
 
-// An HTTP handler which returns a terrain tile resource
-func TerrainHandler(store stores.Storer, authFile string, authRealm string) func(http.ResponseWriter, *http.Request) {
+// An HTTP handler which returns a png tile resource
+func PngtileHandler(store stores.Storer, authFile string, authRealm string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
-			t   stores.Terrain
+			t   stores.Pngtile
 			err error
 		)
 
@@ -27,7 +27,7 @@ func TerrainHandler(store stores.Storer, authFile string, authRealm string) func
 		}()
 
 		vars := mux.Vars(r)
-
+		
 		// Authenticate
 		if authFile != "" {
 			log.Debug(fmt.Sprintf("Authenticating using auth-file: %s", authFile))
@@ -50,7 +50,7 @@ func TerrainHandler(store stores.Storer, authFile string, authRealm string) func
 		}
 
 		// Try and get a tile from the store
-		err = store.TileTerrain(vars["tileset"], &t)
+		err = store.TilePng(vars["tileset"], &t)
 		if err == stores.ErrNoItem {
 			if store.TilesetStatus(vars["tileset"]) == stores.NOT_FOUND {
 				err = nil
@@ -62,36 +62,34 @@ func TerrainHandler(store stores.Storer, authFile string, authRealm string) func
 
 			if t.IsRoot() {
 				// serve up a blank tile as it is a missing root tile
-				data, err := assets.Asset("data/smallterrain-blank.terrain")
+				data, err := assets.Asset("data/blank.png")
 				if err != nil {
 					return
 				} else {
-					err = t.UnmarshalBinary(data)
+					err = t.PutImage(data)
 					if err != nil {
 						return
 					}
 				}
 			} else {
 				err = nil
-				http.Error(w, errors.New("The terrain tile does not exist").Error(), http.StatusNotFound)
+				http.Error(w, errors.New("The png tile does not exist").Error(), http.StatusNotFound)
 				return
 			}
 		} else if err != nil {
 			return
 		}
 
-		body, err := t.MarshalBinary()
+		body, err := t.GetImage()
 		if err != nil {
 			return
 		}
 
 		// send the tile to the client
-		tileName := vars["y"]+".terrain";
-		log.Debug("TerrainHandler sending /"+vars["tileset"]+"/"+vars["z"]+"/"+vars["x"]+"/"+tileName)
+		log.Debug("PngtileHandler sending /"+vars["tileset"]+"/"+vars["z"]+"/"+vars["x"]+"/"+vars["y"]+".png")
 		headers := w.Header()
-		headers.Set("Content-Type", "application/octet-stream")
-		headers.Set("Content-Encoding", "gzip")
-		headers.Set("Content-Disposition", "attachment;filename="+tileName)
+		headers.Set("Content-Type", "image/png")
+		//headers.Set("Content-Encoding", "gzip")
 		w.Write(body)
 	}
 }

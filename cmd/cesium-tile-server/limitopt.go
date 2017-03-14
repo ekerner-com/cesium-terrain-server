@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/geo-data/cesium-terrain-server/handlers"
+	"github.com/ekerner-com/cesium-tile-server/handlers"
 	"strconv"
 )
 

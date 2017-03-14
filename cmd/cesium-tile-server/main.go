@@ -4,9 +4,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	myhandlers "github.com/geo-data/cesium-terrain-server/handlers"
-	"github.com/geo-data/cesium-terrain-server/log"
-	"github.com/geo-data/cesium-terrain-server/stores/fs"
+	myhandlers "github.com/ekerner-com/cesium-tile-server/handlers"
+	"github.com/ekerner-com/cesium-tile-server/log"
+	"github.com/ekerner-com/cesium-tile-server/stores/fs"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	l "log"
@@ -21,6 +21,10 @@ func main() {
 	memcached := flag.String("memcached", "", "(optional) memcached connection string for caching tiles e.g. localhost:11211")
 	baseTerrainUrl := flag.String("base-terrain-url", "/tilesets", "base url prefix under which all tilesets are served")
 	noRequestLog := flag.Bool("no-request-log", false, "do not log client requests for resources")
+	sslCert := flag.String("ssl-cert", "", "(optional) server public key file. enables ssl. see notes at https://golang.org/pkg/net/http/#ListenAndServeTLS")
+	sslKey := flag.String("ssl-key", "", "(optional unless ssl-cert passed) server private key file")
+	authFile := flag.String("auth-file", "", "(optional) htpasswd file. enables BasicAuth. doesnt apply to web-dir")
+	authRealm := flag.String("auth-realm", "Cesium Tile Server v1.0", "(optional) sets HTTP Realm for BasicAuth")
 	logging := NewLogOpt()
 	flag.Var(logging, "log-level", "level at which logging occurs. One of crit, err, notice, debug")
 	limit := NewLimitOpt()
@@ -33,10 +37,12 @@ func main() {
 
 	// Get the tileset store
 	store := fs.New(*tilesetRoot)
+	log.Debug(fmt.Sprintf("serving tilesets from %s", *tilesetRoot))
 
 	r := mux.NewRouter()
-	r.HandleFunc(*baseTerrainUrl+"/{tileset}/layer.json", myhandlers.LayerHandler(store))
-	r.HandleFunc(*baseTerrainUrl+"/{tileset}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.terrain", myhandlers.TerrainHandler(store))
+	r.HandleFunc(*baseTerrainUrl+"/{tileset}/layer.json", myhandlers.LayerHandler(store, authFile, authRealm))
+	r.HandleFunc(*baseTerrainUrl+"/{tileset}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.terrain", myhandlers.TerrainHandler(store, authFile, authRealm))
+	r.HandleFunc(*baseTerrainUrl+"/{tileset}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", myhandlers.PngtileHandler(store, authFile, authRealm))
 	if len(*webRoot) > 0 {
 		log.Debug(fmt.Sprintf("serving static resources from %s", *webRoot))
 		r.PathPrefix("/").Handler(http.FileServer(http.Dir(*webRoot)))
@@ -54,9 +60,16 @@ func main() {
 
 	http.Handle("/", handler)
 
-	log.Notice(fmt.Sprintf("server listening on port %d", *port))
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil); err != nil {
+	var err error
+	if *sslCert == "" || *sslKey == "" {
+		err = http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+	} else {
+		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", *port), *sslCert, *sslKey, nil)
+	}
+
+	if err != nil {
 		log.Crit(fmt.Sprintf("server failed: %s", err))
 		os.Exit(1)
 	}
+	log.Notice(fmt.Sprintf("server listening on port %d", *port))
 }
